@@ -54,7 +54,7 @@ def build_transformation_catalog(tc_target, dax):
     if full_path is None:
         raise RuntimeError("mProject is not in the $PATH")
     base_dir = os.path.dirname(full_path)
-    
+
     f = open("data/tc.txt", "w")
     if tc_target == "container":
         f.write("cont montage {\n")
@@ -83,8 +83,31 @@ def build_transformation_catalog(tc_target, dax):
             f.write("    container \"montage\"\n")
             f.write("    pfn \"file://%s/%s\"\n" %(base_dir, fname))
 
+        # Control what kind of jobs use clustering
         if fname in ["mProject", "mDiff", "mDiffFit", "mBackground"]:
+            # TODO: Customize the clustering by configuration
+            # Horizontal Clustering
+            # 1) clusters.size factor
+            #
+            # The clusters.size factor denotes how many jobs need to be merged into a single clustered job.
+            # It is specified via the use of a PEGASUS namespace profile key 'clusters.size'.
+            # for e.g.
+            #   if at a particular level, say 4 jobs referring to logical transformation B have been scheduled to a siteX.
+            #   The clusters.size factor associated with job B for siteX is say 3. This will result in 2 clustered jobs,
+            #   one composed of 3 jobs and another of 2 jobs.
             f.write("    profile pegasus \"clusters.size\" \"3\"\n")
+
+            # 2) clusters.num factor
+            #
+            # The clusters.num factor denotes how many clustered jobs does the user want to see per level per site.
+            # It is specified via the use of a PEGASUS namespace profile key 'clusters.num'. for e.g.
+            #
+            #   if at a particular level, say 4 jobs referring to logical transformation B have been scheduled to a siteX.
+            #   The 'clusters.num' factor associated with job B for siteX is say 3.
+            #   This will result in 3 clustered jobs, one composed of 2 jobs and others of a single job each.
+
+            # Runtime clustering
+            # f.write("    profile pegasus \"runtime\" \"100\"\n")
         f.write("  }\n")
         f.write("}\n")
     f.close()
@@ -168,7 +191,8 @@ def add_band(dax, band_id, center, degrees, survey, band, color):
     print("\nAdding band %s (%s %s -> %s)" %(band_id, survey, band, color))
 
     # data find - go a little bit outside the box - see mExec implentation
-    degrees_datafind = str(float(degrees) * 1.42)
+    # degrees_datafind = str(float(degrees) * 1.42)
+    degrees_datafind = str(float(degrees))
     cmd = "mArchiveList %s %s \"%s\" %s %s data/%s-images.tbl" \
           %(survey, band, center, degrees_datafind, degrees_datafind, band_id)
     print "Running sub command: " + cmd
@@ -410,6 +434,7 @@ def main():
     dax.invoke('on_error', share_dir + "/notification/email")
     dax.invoke('on_success', share_dir + "/notification/email --report=pegasus-statistics")
 
+    # TODO: Passing configuration for the job clustering as arguments
     build_transformation_catalog(args.tc_target, dax)
 
     # region.hdr is the template for the ouput area

@@ -16,7 +16,7 @@ if [ ! -e montage-workflow.py ]; then
 fi
 rm -rf data
 
-./montage-workflow.py --center "15.09552 -0.74559" --degrees 2.0 --band 2mass:j:red --band 2mass:h:green --band 2mass:k:blue
+./montage-workflow.py --center "15.09552 -0.74559" --degrees 0.1 --band 2mass:j:red --band 2mass:h:green --band 2mass:k:blue
 
 pegasus-plan \
         --dir work \
